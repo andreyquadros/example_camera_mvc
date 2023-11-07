@@ -1,63 +1,39 @@
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
-import 'package:teste_camera/capture_image.dart';
-import 'package:teste_camera/initiate_camera.dart';
+import 'package:get/get.dart';
+import 'camera_controller.dart';
+import 'capture_image.dart';
 
-class HomeScreen extends StatefulWidget {
-  const HomeScreen({Key? key}) : super(key: key);
 
-  @override
-  State<HomeScreen> createState() => _HomeScreenState();
-}
-
-class _HomeScreenState extends State<HomeScreen> {
-  late CameraController controller;
-  bool isControllerInitialized = false;
-
-  void initCamera() async {
-    var cameras = await availableCameras();
-    controller = CameraController(cameras[0], ResolutionPreset.medium);
-    await controller!.initialize();
-    setState(() {
-      isControllerInitialized = true;
-    });
-  }
-
-  @override
-  void initState() {
-    initCamera();
-    super.initState();
-  }
+class HomeScreen extends StatelessWidget {
+  final CameraXController controller = Get.put(CameraXController());
 
   @override
   Widget build(BuildContext context) {
-    if (!isControllerInitialized) {
-      return Scaffold(
-        appBar: AppBar(
-            title: Text(
-          'Carregando Câmera',
-        )),
-        body: Column(
-          children: [Text('Carregando Câmera!')],
-        ),
-      );
-    }
     return Scaffold(
       appBar: AppBar(
-          title: Text(
-        'Uso da Câmera',
-      )),
-      body: Column(
-        children: [
-          Text('Câmera simulada em ação!'),
-          CameraPreview(controller!),
-          ElevatedButton(
-              onPressed: () {
-                captureImage(controller);
-              },
-              child: Text('Tirar Foto'))
-        ],
+        title: Obx(() => Text(controller.model.isInitialized.value
+            ? 'Uso da Câmera'
+            : 'Carregando Câmera')),
       ),
+      body: Obx(() {
+        if (!controller.model.isInitialized.value) {
+          return Column(
+            children: [Text('Carregando Câmera!')],
+          );
+        }
+        return Column(
+          children: [
+            Text('Câmera simulada em ação!'),
+            CameraPreview(controller.model.controller),
+            ElevatedButton(
+                onPressed: () {
+                 captureImage(controller.model.controller);
+                },
+                child: Text('Tirar Foto'))
+          ],
+        );
+      }),
     );
   }
 }
